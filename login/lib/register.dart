@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
+import 'package:login/homepage.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -10,6 +13,7 @@ class _RegisterState extends State<Register> {
   TextEditingController _nameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -55,9 +59,9 @@ class _RegisterState extends State<Register> {
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: OutlineButton(
-                    onPressed: () {
+                    onPressed: () async{
                       if (_formKey.currentState.validate()) {
-                        
+                         _registerAccount();
                       }
                     },
                     child: Text("Register"),
@@ -69,5 +73,21 @@ class _RegisterState extends State<Register> {
         ),
       ),
     ));
+  }
+
+  void _registerAccount() async {
+    final User _user = (await _auth.createUserWithEmailAndPassword(
+            email: _emailController.text, password: _passwordController.text))
+        .user;
+        if(_user !=null){
+          if(!_user.emailVerified){
+            await _user.sendEmailVerification();
+          }
+          await _user.updateProfile(displayName:_nameController.text);
+          final user1=_auth.currentUser;
+          Navigator.push(context, MaterialPageRoute(builder: (context){
+            return Home(user:user1);
+          }));
+        }
   }
 }
